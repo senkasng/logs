@@ -1,4 +1,4 @@
-package github.com/senkasng/logs
+package logs
 
 import (
 	"sync"
@@ -13,9 +13,9 @@ import (
 
 // 4个log 级别
 const (
-	LevelInfo = iota
-	LevelError
+	LevelError = iota
 	LevelWarning
+	LevelInfo
 	LevelDebug
 )
 
@@ -153,7 +153,7 @@ func (al *AppLogger) setLogger(adapterName string, configs ...string) error {
 	return nil
 }
 
-//
+// 异步启动 logget
 func (al *AppLogger) startLogger() {
 	gameOver := false
 	for {
@@ -208,6 +208,8 @@ func (al *AppLogger) flush() {
 	}
 }
 
+
+//同步写日志函数，logger 实例需要实现 WriteMsg 函数
 func (al *AppLogger) writeToLoggers(when time.Time, msg string, level int) {
 	for _, l := range al.outputs {
 		err := l.WriteMsg(when, msg, level)
@@ -220,22 +222,7 @@ func (al *AppLogger) writeToLoggers(when time.Time, msg string, level int) {
 }
 
 
-func (al *AppLogger) Write(p []byte) (n int, err error) {
-	if len(p) == 0 {
-		return 0, nil
-	}
-	// writeMsg will always add a '\n' character
-	if p[len(p)-1] == '\n' {
-		p = p[0 : len(p)-1]
-	}
-	// set levelLoggerImpl to ensure all log message will be write out
-	err = al.writeMsg(levelLoggerImpl, string(p))
-	if err == nil {
-		return len(p), err
-	}
-	return 0, err
-}
-
+//写日志的主要函数，支持同步写和异步写
 func (al *AppLogger) writeMsg(logLevel int, msg string, v ...interface{}) error {
 	if !al.init {
 		al.lock.Lock()
@@ -245,6 +232,7 @@ func (al *AppLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 
 	if len(v) > 0 {
 		msg = fmt.Sprintf(msg, v...)
+		//fmt.Println(msg)
 	}
 
 	msg = al.prefix + " " + msg
@@ -268,6 +256,7 @@ func (al *AppLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 		msg = levelPrefix[logLevel] + " " + msg
 	}
 
+	// 异步写实现
 	if al.asynchronous {
 		lm := logMsgPool.Get().(*logMsg)
 		lm.level = logLevel
@@ -300,11 +289,35 @@ func (al *AppLogger) Close() {
 }
 
 
+
+
 func (al *AppLogger) Info(format string, v ...interface{}) {
 	if LevelInfo > al.level {
 		return
 	}
 	al.writeMsg(LevelInfo, format, v...)
+}
+
+func (al *AppLogger) Warn(format string, v ...interface{}) {
+	if LevelWarning > al.level {
+		return
+	}
+	al.writeMsg(LevelWarning, format, v...)
+}
+
+func (al *AppLogger) Debug(format string, v ...interface{}) {
+	if LevelDebug > al.level {
+		return
+	}
+	al.writeMsg(LevelDebug, format, v...)
+}
+
+
+func (al *AppLogger) Error(format string, v ...interface{}) {
+	if LevelError > al.level {
+		return
+	}
+	al.writeMsg(LevelError, format, v...)
 }
 
 

@@ -1,4 +1,4 @@
-package github.com/senkasng/logs 
+package logs 
 
 import (
 	"encoding/json"
