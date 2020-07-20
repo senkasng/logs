@@ -5,13 +5,12 @@ import (
 	"os"
 	"strings"
 	"time"
-	"github.com/shiena/ansicolor"
 )
 
 // brush is a color join function
 type brush func(string) string
 
-// newBrush return a fix color Brush
+// newBrush return a fix color Brush,\033[文字背景颜色;文字颜色m 你要显示的内容 \033[0m
 func newBrush(color string) brush {
 	pre := "\033["
 	reset := "\033[0m"
@@ -21,14 +20,10 @@ func newBrush(color string) brush {
 }
 
 var colors = []brush{
-	newBrush("1;37"), // Emergency          white
-	newBrush("1;36"), // Alert              cyan
-	newBrush("1;35"), // Critical           magenta
-	newBrush("1;31"), // Error              red
+	newBrush("1;31"), // Error              高亮度 red
 	newBrush("1;33"), // Warning            yellow
-	newBrush("1;32"), // Notice             green
-	newBrush("1;34"), // Informational      blue
-	newBrush("1;44"), // Debug              Background blue
+	newBrush("1;32"), // Informational      green
+	newBrush("1;37"), // Debug              green
 }
 
 // consoleWriter implements LoggerInterface and writes messages to terminal.
@@ -41,7 +36,7 @@ type consoleWriter struct {
 // NewConsole create ConsoleWriter returning as LoggerInterface.
 func NewConsole() Logger {
 	cw := &consoleWriter{
-		lg:       newLogWriter(ansicolor.NewAnsiColorWriter(os.Stdout)),
+		lg:       newLogWriter(os.Stdout),
 		Level:    LevelDebug,
 		Colorful: true,
 	}
