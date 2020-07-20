@@ -155,6 +155,18 @@ func (al *AppLogger) setLogger(adapterName string, configs ...string) error {
 	return nil
 }
 
+
+func (al *AppLogger) SetLogger(adapterName string, configs ...string) (error) {
+	err := al.setLogger(adapterName,configs...)
+	if err != nil {
+		return err
+	}
+	al.outputs = al.outputs[1:]
+	//fmt.Println(al.outputs[0])
+	return nil 
+}
+
+
 // 异步启动 logget
 func (al *AppLogger) startLogger() {
 	gameOver := false
@@ -226,11 +238,11 @@ func (al *AppLogger) writeToLoggers(when time.Time, msg string, level int) {
 
 //写日志的主要函数，支持同步写和异步写
 func (al *AppLogger) writeMsg(logLevel int, msg string, v ...interface{}) error {
-	if !al.init {
+	/*if !al.init {
 		al.lock.Lock()
 		al.setLogger(AdapterConsole)
 		al.lock.Unlock()
-	}
+	}*/
 
 	if len(v) > 0 {
 		msg = fmt.Sprintf(msg, v...)
@@ -344,7 +356,7 @@ func (lg *logWriter) writeln(when time.Time, msg string) (int, error) {
 
 
 func formatTimeHeader(when time.Time) ([]byte) {
-	whenS := when.Format(layout)
+	whenS := when.Format(layout) + "  "
 	whenB := []byte(whenS)
 	return whenB 
 }
