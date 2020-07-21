@@ -135,6 +135,7 @@ func (al *AppLogger) Async(msgLen ...int64) *AppLogger {
 func (al *AppLogger) setLogger(adapterName string, configs ...string) error {
 	config := append(configs, "{}")[0]
 	for _, l := range al.outputs {
+		//fmt.Println(l.name == adapterName)
 		if l.name == adapterName {
 			return fmt.Errorf("logs: duplicate adaptername %q (you have set this logger before)", adapterName)
 		}
@@ -148,7 +149,7 @@ func (al *AppLogger) setLogger(adapterName string, configs ...string) error {
 	lg := logAdapter()
 	err := lg.Init(config)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
+		fmt.Fprintln(os.Stderr, "logs.APPLogger.SetLogger: "+err.Error())
 		return err
 	}
 	al.outputs = append(al.outputs, &nameLogger{name: adapterName, Logger: lg})
@@ -156,16 +157,26 @@ func (al *AppLogger) setLogger(adapterName string, configs ...string) error {
 }
 
 
-func (al *AppLogger) SetLogger(adapterName string, configs ...string) (error) {
+func (al *AppLogger) AddLogger(adapterName string, configs ...string) (error) {
 	err := al.setLogger(adapterName,configs...)
 	if err != nil {
 		return err
 	}
-	al.outputs = al.outputs[1:]
+	//al.outputs = al.outputs[1:]
 	//fmt.Println(al.outputs[0])
 	return nil 
 }
 
+
+func (al *AppLogger) RemoveLogger(adapterName string) (error) {	
+	for k,lg := range al.outputs {
+		if lg.name == adapterName {
+			al.outputs = append(al.outputs[:k],al.outputs[k+1:]...)
+			break
+		}
+	}
+	return nil 
+}
 
 // 异步启动 logget
 func (al *AppLogger) startLogger() {
